@@ -1,0 +1,47 @@
+#!/usr/bin/perl
+use warnings;
+use strict;
+# Cody
+# simply run to see who's logged in wuth zid's mapped to real names
+
+
+my %UserNames;
+#if(is_likewise()){ print "Getting AD users, may take a moment\n"; }
+if(@ARGV){
+    if($ARGV[0] =~m/^[z|v][0-9]{6}$/){ print `getent passwd $ARGV[0]|awk -F: '{ print \$5 }'`; exit; }
+}
+my @Getent=`cat /etc/passwd`;
+foreach my $line(@Getent){
+    my (@tmp)=split(/:/,$line);
+    $UserNames{$tmp[0]}=$tmp[4];
+    if($tmp[2]<1000){$UserNames{$tmp[0]}="*".$UserNames{$tmp[0]};}
+}
+my $cmd="who";
+$cmd="@ARGV" if @ARGV;
+my @WhoResults=`$cmd`;
+chomp @WhoResults;
+foreach my $line(@WhoResults){
+    my %CMD_Hashed;
+    my (@tmp)=split(/\s+/,$line);    
+    my $user=shift @tmp;
+    if ($user){
+        if($user!~m/^[z|v][0-9]{6}/ && $line=~m/([z|v][0-9]{6})/ ){
+            $user=$1;
+        }
+
+        if(! $UserNames{$user} && $user=~m/^[z|v][0-9]{6}/){
+            my (@tmp2)=split(/:/,`getent passwd $user`);
+            $UserNames{$user}=$tmp2[4];
+        }
+    }
+    print $line;
+    if($user){ print "\t (".$UserNames{$user}.")" if $UserNames{$user}; }
+    print "\n";
+}
+
+sub is_likewise{
+    if(`grep "Active Directory" /etc/issue`){return 1;}
+    elsif(`ps -ef|grep pbis|grep -v grep`){ return 1;}
+}
+#for i in `who | grep -i zbc | sed "s/pts.*.//" | sort -u ` ; do /opt/likewise/bin/lw-find-user-by-name $i ; done
+

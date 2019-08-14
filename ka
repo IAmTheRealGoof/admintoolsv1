@@ -1,0 +1,12 @@
+#!/bin/bash
+#Cody
+#keeps connections alive
+
+spin() {
+   local -a marks=( '/' '-' '\' '|' )
+   while [[ 1 ]]; do
+     printf '%s\r' "${marks[i++ % ${#marks[@]}]}"
+     sleep 1
+   done
+ }
+spin
