@@ -1,0 +1,33 @@
+#!/usr/bin/perl
+use warnings;
+use strict;
+
+my ($tmp,$run_lvl)=split(/ /,`/sbin/runlevel`);
+chomp($run_lvl);
+
+if(-e "/sbin/chkconfig"){
+    my @list=`/sbin/chkconfig --list 2> /dev/null|grep $run_lvl:on`;
+    my @Services;
+    for(my $i=0;$i<@list;$i++){
+        $list[$i] =~ s/^\s+//;
+        my @line=split(/\s/,$list[$i]);
+        push(@Services,$line[0]);
+        my $result=`/sbin/service $line[0] status`;
+
+        if($result =~ m/stopped/){
+                print "$i Warning! $line[0] should be running but is found stopped.\n";
+
+        }
+        elsif($result =~ m/dead/){
+                print "$i Warning! $line[0] should be running but found dead.\n";
+        }
+        else{
+                #print "$i Good. $line[0] \n";
+                #print "$result\n\n\n" if $line[0]=~m/puppet/;
+        }
+    }
+}
+else{
+        my $result=`/usr/bin/service --status-all`;
+}
+system('sudo grep "kernel: Out of memory: Killed process" /var/log/messages');
