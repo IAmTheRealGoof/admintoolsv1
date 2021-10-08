@@ -1,0 +1,33 @@
+#!/usr/bin/perl
+use warnings;
+use strict;
+use DateTime;
+my $done;
+
+print "Converts epoch time to human time by passing it as parameters or commands that it will parse the output.\n\t$0 1234567890\n\t$0 cat /some/dumb.log\n" if !@ARGV;
+
+foreach my $a(@ARGV){
+    if($a =~m/^[0-9]+\.?[0-9]*$/){
+        my $dt = DateTime->from_epoch(epoch => $a);
+        print $dt->strftime('%Y-%m-%d %H:%M:%S'),"\n";
+        $done++;
+    }
+}
+exit if $done;
+
+my $cmd="@ARGV";
+
+my @Results=`$cmd`;
+
+foreach my $line(@Results){
+    my %CMD_Hashed;
+    my (@tmp)=split(/\s+/,$line);
+    foreach my $a(@tmp){
+        if($a=~m/^[0-9]{8,}\.?[0-9]*$/){
+            my $dt = DateTime->from_epoch(epoch => $a);
+            my $date=$dt->strftime('%Y-%m-%d %H:%M:%S');
+            $line=~s/$a/$date/;
+        }
+    }
+    print "$line"
+}
